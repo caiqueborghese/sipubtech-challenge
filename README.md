@@ -3,10 +3,6 @@
 Microserviço de catálogo de filmes com **arquitetura hexagonal**, split em **API Gateway (HTTP/REST)** e **Movies (gRPC)** com **MongoDB** como storage.  
 A comunicação entre os serviços é feita via **gRPC/Protobuf**. A API HTTP é documentada com **Swagger**.
 
-> **Decisão de ID (exigência do teste)**  
-> O `id` exposto ao cliente é o **ID do arquivo `movies.json`** (apelidado de `legacy_id`).  
-> Internamente o Mongo usa `_id` (ObjectID), mas **todas as respostas/rotas HTTP usam o `legacy_id`** quando ele existir.  
-> Para itens criados via `POST`, quando não há `legacy_id`, o sistema usa o `_id` do Mongo como `id` (string).
 
 ---
 
