@@ -229,14 +229,6 @@ docker compose down -v
 docker compose up -d --build
 ```
 
-**Confirmar que está usando o `legacy_id`**
-```bash
-# pega um ID numérico do seed
-SEED_ID=$(curl -s http://localhost:8080/movies   | jq -r '.[] | select(.id|test("^[0-9]+$")) | .id' | head -n1)
-
-curl -s http://localhost:8080/movies/$SEED_ID | jq .
-```
-
 ---
 
 ## 🧪 Testes
@@ -264,7 +256,7 @@ make mocks
 ```
 
 > Há testes **com mocks** (ports/mock) e **sem mocks** (ex.: grpc com `bufconn`).  
-> Teste de repositório Mongo “de verdade” pode ser habilitado com build tag `integration` (opcional), apontando `MONGODB_URI` para um Mongo local de testes.
+> Teste de repositório Mongo pode ser habilitado com build tag `integration` (opcional), apontando `MONGODB_URI` para um Mongo local de testes.
 
 ---
 
