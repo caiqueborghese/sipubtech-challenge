@@ -1,0 +1,105 @@
+basePath: /
+definitions:
+  domain.Movie:
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+      year:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Gateway REST que expõe os serviços de filmes via gRPC
+  title: Movies API Gateway
+  version: "1.0"
+paths:
+  /movies:
+    get:
+      parameters:
+      - description: Máximo de itens retornados (default 50, max 200)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Movie'
+            type: array
+      summary: Lista todos os filmes
+      tags:
+      - movies
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Movie
+        in: body
+        name: movie
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Movie'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Movie'
+        "400":
+          description: invalid body
+          schema:
+            type: string
+      summary: Cria um novo filme
+      tags:
+      - movies
+  /movies/{id}:
+    delete:
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: movie not found
+          schema:
+            type: string
+      summary: Remove um filme
+      tags:
+      - movies
+    get:
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Movie'
+        "400":
+          description: invalid id
+          schema:
+            type: string
+        "404":
+          description: movie not found
+          schema:
+            type: string
+      summary: Busca um filme por ID
+      tags:
+      - movies
+swagger: "2.0"

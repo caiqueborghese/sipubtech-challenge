@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package moviespb;
+option go_package = "github.com/caiqueborghese/sipubtech-challenge/proto/moviespb";
+
+import "google/protobuf/empty.proto";
+
+service MovieService {
+  rpc ListMovies  (google.protobuf.Empty)     returns (ListMoviesResponse);
+  rpc GetMovie    (GetMovieRequest)           returns (GetMovieResponse);
+  rpc CreateMovie (CreateMovieRequest)        returns (CreateMovieResponse);
+  rpc DeleteMovie (DeleteMovieRequest)        returns (DeleteMovieResponse);
+}
+
+message Movie {
+  string id    = 1;
+  string title = 2;
+  int32  year  = 3;
+}
+
+message ListMoviesResponse { repeated Movie movies = 1; }
+
+message GetMovieRequest  { string id = 1; }
+message GetMovieResponse { Movie  movie = 1; }
+
+message CreateMovieRequest {
+  string title = 1;
+  int32  year  = 2;
+}
+message CreateMovieResponse { Movie movie = 1; }
+
+message DeleteMovieRequest  { string id = 1; }
+message DeleteMovieResponse { bool success = 1; }

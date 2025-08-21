@@ -1,0 +1,26 @@
+# Go build artefacts
+bin/
+out/
+coverage/
+*.test
+*.coverprofile
+
+# Go module/cache 
+**/vendor/
+
+
+# IDE/OS
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Logs e temporários
+*.log
+*.tmp
+tmp/
+*.swp
+
+# Docker
+**/.env

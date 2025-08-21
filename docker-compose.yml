@@ -1,0 +1,38 @@
+services:
+  mongo:
+    image: mongo:6
+    container_name: sipubtech-challenge-mongo-1
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  movies:
+    build:
+      context: .                         # ← raiz do repo
+      dockerfile: deploy/docker/movies.Dockerfile
+    container_name: movies
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/moviesdb
+      - MONGODB_DB=moviesdb
+      - GRPC_PORT=50051
+      - SEED_FILE=/app/seed/movies.json  # ← o Dockerfile copia esse arquivo pra /app/seed
+    depends_on:
+      - mongo
+    ports:
+      - "50051:50051"
+
+  api-gateway:
+    build:
+      context: .                         # ← raiz do repo
+      dockerfile: deploy/docker/api.Dockerfile
+    container_name: sipubtech-challenge-api-1
+    environment:
+      - MOVIES_ADDR=movies:50051         # ← bate com getenv("MOVIES_ADDR", …) do main.go
+    depends_on:
+      - movies
+    ports:
+      - "8080:8080"
+
+volumes:
+  mongo_data:
