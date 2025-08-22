@@ -260,3 +260,94 @@ make mocks
 
 ---
 
+## 🚀 Extras — Event-Driven & Kubernetes
+
+### 📨 Event-Driven com NATS
+
+O serviço **movies** publica eventos em NATS quando um filme é criado ou apagado.
+
+- **Subject**: `movies.created`  
+  **Payload**:
+  ```json
+  {"type":"movies.created","occurred_at":"<RFC3339>","payload":{"id":"<string>","title":"<string>","year":<int>}}
+  ```
+
+- **Subject**: `movies.deleted`  
+  **Payload**:
+  ```json
+  {"type":"movies.deleted","occurred_at":"<RFC3339>","payload":{"id":"<string>"}}
+  ```
+
+**Variáveis de ambiente (movies):**
+
+| Nome | Padrão | Descrição |
+|---|---|---|
+| `NATS_URL` | *(vazio)* | URL do broker (ex.: `nats://nats:4222`). **Se vazio, a publicação é desativada** |
+| `NATS_SUBJECT_CREATED` | `movies.created` | Tópico de criação |
+| `NATS_SUBJECT_DELETED` | `movies.deleted` | Tópico de remoção |
+
+**Teste rápido:**
+```bash
+# 1) Subir stack
+docker compose up -d --build
+
+# 2) Abrir subscriber (em outra aba do terminal)
+NET=$(docker network ls --format '{{.Name}}' | grep 'sipubtech-challenge_default')
+docker run --rm -it --network "$NET" natsio/nats-box:latest   sh -lc "nats --server nats://nats:4222 sub 'movies.>'"
+
+# 3) Criar e deletar filme para ver eventos
+NEW=$(curl -s -X POST http://localhost:8080/movies   -H "Content-Type: application/json"   -d '{"title":"Event Test","year":2027}'); echo "$NEW" | jq .
+
+ID=$(echo "$NEW" | jq -r '.id')
+curl -i -X DELETE "http://localhost:8080/movies/$ID"
+```
+
+---
+
+### ☸️ Kubernetes (Minikube)
+
+A stack contém 4 Deployments/Services: **mongo**, **movies** (gRPC), **api** (HTTP/Swagger) e **nats** (broker).  
+Manifests estão em `deploy/k8s/`. Namespace: `sipub`.
+
+**Passos:**
+```bash
+# 1) Start
+minikube start --driver=docker
+kubectl get nodes
+
+# 2) Build e carregar imagens
+docker build -f deploy/docker/movies.Dockerfile -t sipubtech-challenge-movies:latest .
+docker build -f deploy/docker/api.Dockerfile    -t sipubtech-challenge-api-gateway:latest .
+minikube image load sipubtech-challenge-movies:latest
+minikube image load sipubtech-challenge-api-gateway:latest
+
+# 3) Aplicar manifests
+kubectl apply -f deploy/k8s/namespace.yaml
+kubectl apply -f deploy/k8s/mongo.yaml
+kubectl apply -f deploy/k8s/nats.yaml
+kubectl apply -f deploy/k8s/movies.yaml
+kubectl apply -f deploy/k8s/api.yaml
+kubectl -n sipub get all
+```
+
+**Acesso ao Swagger:**
+```bash
+# NodePort
+minikube service -n sipub api --url
+
+# ou via port-forward
+kubectl -n sipub port-forward svc/api 30080:8080
+# Swagger em http://localhost:30080/swagger/index.html
+```
+
+**Testar listagem:**
+```bash
+curl -s "http://127.0.0.1:XXXXX/movies?limit=5" | jq .
+```
+
+---
+
+✅ **Checklist implementado**  
+- [x] NATS (eventos `movies.created` e `movies.deleted`)  
+- [x] Kubernetes (manifests + NodePort/port-forward)  
+- [x] Comandos de teste reproduzíveis  
