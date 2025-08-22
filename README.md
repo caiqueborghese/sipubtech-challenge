@@ -345,9 +345,3 @@ kubectl -n sipub port-forward svc/api 30080:8080
 curl -s "http://127.0.0.1:XXXXX/movies?limit=5" | jq .
 ```
 
----
-
-✅ **Checklist implementado**  
-- [x] NATS (eventos `movies.created` e `movies.deleted`)  
-- [x] Kubernetes (manifests + NodePort/port-forward)  
-- [x] Comandos de teste reproduzíveis  
