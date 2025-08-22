@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: movies-config
+  namespace: sipub
+data:
+  MONGODB_URI: mongodb://mongo:27017/moviesdb
+  MONGODB_DB: moviesdb
+  GRPC_PORT: "50051"
+  SEED_FILE: /app/seed/movies.json
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: movies
+  namespace: sipub
+spec:
+  selector:
+    app: movies
+  ports:
+    - name: grpc
+      port: 50051
+      targetPort: 50051
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movies
+  namespace: sipub
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: movies
+  template:
+    metadata:
+      labels:
+        app: movies
+    spec:
+      containers:
+        - name: movies
+          image: sipubtech-challenge-movies:latest
+          imagePullPolicy: IfNotPresent # minikube/kind: use Never se imagens locais
+          ports:
+            - containerPort: 50051
+          envFrom:
+            - configMapRef:
+                name: movies-config
+          readinessProbe:
+            tcpSocket:
+              port: 50051
+            initialDelaySeconds: 2
+            periodSeconds: 5
