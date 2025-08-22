@@ -13,10 +13,17 @@ var _ ports.MovieService = (*movieService)(nil)
 
 type movieService struct {
 	repo ports.MovieRepository
+	pub  ports.EventPublisher // opcional: pode ser nil
 }
 
+// Construtor compatível (sem publisher)
 func NewMovieService(repo ports.MovieRepository) ports.MovieService {
 	return &movieService{repo: repo}
+}
+
+// Construtor com publisher (event-driven)
+func NewMovieServiceWithPublisher(repo ports.MovieRepository, pub ports.EventPublisher) ports.MovieService {
+	return &movieService{repo: repo, pub: pub}
 }
 
 func (s *movieService) List(ctx context.Context) ([]domain.Movie, error) {
@@ -35,14 +42,29 @@ func (s *movieService) Create(ctx context.Context, m domain.Movie) (*domain.Movi
 	if err := m.Validate(); err != nil {
 		return nil, err
 	}
-	return s.repo.Create(ctx, &m)
+	created, err := s.repo.Create(ctx, &m)
+	if err != nil {
+		return nil, err
+	}
+	// best-effort: não falha a request se mensageria estiver fora
+	if s.pub != nil && created != nil {
+		_ = s.pub.MovieCreated(ctx, *created)
+	}
+	return created, nil
 }
 
 func (s *movieService) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return domain.ErrInvalidID
 	}
-	return s.repo.Delete(ctx, id)
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+	// best-effort
+	if s.pub != nil {
+		_ = s.pub.MovieDeleted(ctx, id)
+	}
+	return nil
 }
 
 func (s *movieService) EnsureSeed(ctx context.Context, seed []domain.Movie) (int, error) {
@@ -58,7 +80,6 @@ func (s *movieService) EnsureSeed(ctx context.Context, seed []domain.Movie) (int
 			continue
 		}
 		if err := seed[i].Validate(); err != nil {
-
 			continue
 		}
 		clean = append(clean, seed[i])
